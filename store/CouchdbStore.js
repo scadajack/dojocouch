@@ -1,5 +1,7 @@
 dojo.provide("dojocouch.store.CouchdbStore");
 
+dojo.require("dojocouch.util.Couch");
+
 dojocouch.store.CouchdbStore.getStore = function(options){
 	return new dojocouch.store._CouchdbStore(options);
 }
