@@ -1,6 +1,41 @@
 A Dojo ObjectStore interface for Couchdb
 
+
+
+For more information regarding this software:
+ contact: scadajack@kantrol.com
+
+
 Contents:
 1) CouchDojo/couch.js: A Dojo implementation of the jquery.couch.js library shipped with couchdb install (used by futon).
 
-2) CouchDojo/store/CouchdbStore.js: A Dojo object store for CouchDb. 
+	This is a liberal port of the jquery.couch.js library distributed with Couchdb 
+	(couchdb.apache.org) to the Dojo framework. In general, the jQuery callback style 
+	Ajax code is converted to promise style code used more commonly in Dojo. 
+	 
+	Structure, method names and intents from the original code are generally 
+	preserved. 
+	 
+	 USAGE: var couch = dojocouch.util.Couch.getCouch(urlPrefix),
+	        where urlPrefix is a url to the couchdb instance 
+	        of interest. Will return a new or cached instance pointing to the couchdb at that 
+	        url. (The couch objects are cached and thus shared amongst clients.)
+
+	        To get access to database specific operations after obtaining a 'couch', do 
+	        var db = couch.db('db name')
+	        (while couches are cached, dbs are not).
+	        
+	 AUTHENTICATION: 
+	        Provides easy implementation of cookie-based authentication. See Session,Login, and Logout.
+
+2) CouchDojo/store/CouchdbStore.js: A Dojo object store for CouchDb.
+
+	This code uses the new Dojo ObjectStore API to interface to a Couchdb instance in a REST-ful manner. In particular, it leverages the dojocouch.couch.js library to provide the http 
+	interface.
+
+	In addition to the standard 'get' method provided by the ObjectStore api, CouchdbStore instances also provide a bulkGet method. A CouchCache wrapper is provided that extends 
+	dojos standard dojo.store.Cache wrapper to recognize the bulkGet calls and attempt to 
+	satisfy from the cache.
+
+
+Code is preliminary, work in progress, and alpha state and much has yet to be tested. In particular, the replication and monitoring code has not been tested.
