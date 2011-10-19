@@ -1,0 +1,6 @@
+A Dojo ObjectStore interface for Couchdb
+
+Contents:
+1) CouchDojo/couch.js: A Dojo implementation of the jquery.couch.js library shipped with couchdb install (used by futon).
+
+2) CouchDojo/store/CouchdbStore.js: A Dojo object store for CouchDb. 
