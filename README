@@ -4,7 +4,9 @@ A Dojo ObjectStore interface for Couchdb
 
 For more information regarding this software:
  contact: scadajack@kantrol.com
+ website: www.kantrol.com
 
+ Blog Post: www.kantrol.com/kanx/index.php?id=14
 
 Contents:
 1) CouchDojo/couch.js: A Dojo implementation of the jquery.couch.js library shipped with couchdb install (used by futon).

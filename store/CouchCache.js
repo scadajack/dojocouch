@@ -32,30 +32,43 @@ dojocouch.store.CouchCache = function(masterStore, cachingStore, /*dojo.store.__
 	//		These are additional options for how caching is handled.
 	var cache = dojo.store.Cache(masterStore,cachingStore,options);
 	cache.bulkGet = function(idArray){
+		console.log("============> dojocouch.store.CouchCache bulkGet method called with array:",idArray);
 		var getArray = [];
 		var objHash = {};
 
-		var getArray = dojo.map(idArray,function(item){
+		dojo.forEach(idArray,function(item){
 			var val = cachingStore.get(item);
-			val ? objHash[item] = val : getArray.push(item);
+			if (val)
+				objHash[item] = val;
+			else 
+				getArray.push(item);
 		});
 
 		return masterStore.bulkGet(getArray)
 			.then(
 				function(results){
 						// put all results back into objHash
-					dojo.forEach(results,function(item){
-						objHash[item["_id"]] = item;
-					});
+					if (results && results.rows){
+						dojo.forEach(results.rows,function(item){
+							objHash[item.doc["_id"]] = item.doc;
+						});
 
-						// now, using idArray, put the results into 
-						// the result array in the same order as specified.
-					return dojo.map(idArray,function(item){
-							return objHash(item);			
-					});
+							// now, using idArray, put the results into 
+							// the result array in the same order as specified.
+						return dojo.map(idArray,function(item){
+								return objHash[item];			
+						});
+					} else 
+						return [];
 				}
 			)
 	}
+
+	// Due to the way the dojo.store.Cache is coded (it doesn't appear to truly delegate calls to 
+	// masterStore, instead it invokes masterStore directly), we need to store a reference to this 
+	// cache object in the masterStore so it can call the above bulkGet function. There may be a more 
+	// elegant way to do this???
+	masterStore.cacheWrapper = cache;
 
 	return cache;
 }

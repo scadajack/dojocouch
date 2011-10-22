@@ -40,9 +40,9 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 	// set when configured with a couch and a database
 	initialized : false,
 
-	//itemWrapper : '',
-
-	cache: null,
+	
+	// Holds a reference to the cache wrapper object. See comments on CouchCache for more info.
+	cacheWrapper: null,
 	//
 	// views: Holds a list of views defined in the default design document for this db.
 	// 		(the default design document has the same name as the database.)
@@ -222,6 +222,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 	},
 
 	bulkGet: function(idArray){
+		console.log("============>  dojocouch.store.CouchdbStore bulkGet called with idArray:",idArray);
 		if (initialized){
 			return this.db.allDocs({keys:idArray,"include_docs":true});
 		} else {
@@ -295,7 +296,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 		//		The optional arguments to apply to the resultset.
 		//	returns: dojo.store.api.Store.QueryResults
 		//		The results of the query, extended with iterative methods.
-		console.log("CouchdbStore query called with Query:",query,", Options:",options);
+		console.log("CouchdbStore",this,", query called with Query:",query,", Options:",options);
 		if (typeof query == "function"){
 			console.error("Invalid query. This store does not support function queries.");
 		}
@@ -345,7 +346,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 
 		var ids = [];
 		var docs = {};
-		self = this;
+		var self = this;
 		var results = qfunc.call(this,query,ourOptions);
 		var qryResults = results
 			.then(function(results){
@@ -361,31 +362,55 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 					for (var row in rows){
 						var id = rows[row].id;
 						ids.push(id);
-						var docValue = rows[row].doc || rows[row].value;
+							// Originally had || rows[row].value but removed. There is no 
+							// assurance that value is the full data record. May create flag 
+							// later to use this for queries that provide full record in data.
+						var docValue = rows[row].doc;  //|| rows[row].value;
 						docValue && docValue["_id"] && (docs[id] = docValue);
 						!(docValue && docValue["_id"]) && stubs.push(id);
 					}
 				}
 				if (stubs && stubs.length > 0){
-					return self.bulkGet(stubs);
+					if (self.cacheWrapper)
+						return self.cacheWrapper.bulkGet(stubs);
+					else 
+						return self.bulkGet(stubs)
+							.then(function(bulkResult){
+									// Want to return an actual array of docs here. So extract docs.
+								if (bulkResult && bulkResult.rows){
+									return dojo.map(bulkResult.rows,function(item){
+										return item.doc;
+									});
+								} else {
+									return [];
+								}
+							});
 				} else {
 					return docs;
 				}
 			})
 			.then(function(result){
-					// Check and see if we had to fetch records for stubs in the query.
-					// If so, stuff the docs array with the records fetched. (Otherwise, 
-					// the query itself had the documents and docs already has the records.)
-				if (result !== docs && result.rows){
-					dojo.forEach(result.rows,function(item){
-						docs[item.doc["_id"]] = item.doc;
+				
+				// Doublecheck here: Shouldn't be getting full result here. Should have only array of rows 
+				// returned. However, if I missed something, try to fix and log an error so we can fix.	
+				if (result && result.rows){
+					console.error("CouchdbStore error ln 390 ==> Result should be array and should not have 'rows' field!");
+					result = result.rows;
+				}
+
+				// Check and see if we had to fetch records for stubs in the query.
+				// If so, stuff the docs array with the records fetched. (Otherwise, 
+				// the query itself had the documents and docs already has the records.)
+				if (result !== docs && result){
+					dojo.forEach(result,function(item){
+						docs[item["_id"]] = item;
 					});
 				}
 				var resArray = [];
 				resArray = dojo.map(ids,function(id){
 					return docs[id];
 				})
-
+				//console.log("CouchdbStore resArray ln 392 ==>",resArray);
 				return self.queryResultProcessor(resArray,options);
 			}, queryErrorFunction);
 
@@ -393,7 +418,8 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 			// If no error, then add total, offset, and rows to results.
 			// (results.results == [successful result, error result]),
 			// so if results.results[1] is defined, it indicates an error.
-		results.results = {
+		//results.results = {
+		qryResults.results = {
 			total : results.then(function(resp){
 						return resp["total_rows"];
 				}, function(){})
@@ -438,7 +464,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 		// this is an allDocs type query with either startkey and endkey or a 
 		// key array.
 	docsQuery : function(query,options){
-		query["include_docs"] = true; // assume we want docs when we do this query.
+		//query["include_docs"] = true; // assume we want docs when we do this query.
 		return this.db.allDocs(query);
 	},
 
