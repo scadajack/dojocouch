@@ -41,3 +41,12 @@ Contents:
 
 
 Code is preliminary, work in progress, and alpha state and much has yet to be tested. In particular, the replication and monitoring code has not been tested.
+
+Roadmap:
+1. Regularize deferred data processing out of dojocouch.util.Couch.js. Currently don't preserve headers which may be useful for error processing. Add headers as field to results hash???
+
+2. Develop error strategy. Currently, no strategy implemented. Mostly just silently fails though some generate alerts.
+
+3. Regularize tests with test framework. DOH or Vows?
+
+4. Test Replication and monitoring functionality of dojocouch.util.couch.js.
