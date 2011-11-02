@@ -60,7 +60,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 	setCouch : function(couch){
 		if (couch && couch.session){
 			this.couch = couch;
-		} else if (couch && typeof couch == "string") {
+		} else if (typeof couch == "string") {
 			this.couch = dojocouch.util.Couch.getCouch(this.target);
 		} else {
 			console.error("setCouch must be called with either a dojocouch.util.Couch instance or a "
@@ -118,7 +118,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 		//	returns: Number
 		return object[this.idProperty];
 	},
-	put: function(object, options){
+	put: function(object, myOptions){
 		// summary:
 		//		Stores an object. This will trigger a PUT request to the server
 		//		if the object has an id, otherwise it will trigger a POST request.
@@ -128,32 +128,39 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 		//		Additional metadata for storing the data.  Includes an "id"
 		//		property if a specific id is to be used.
 		//	returns: Number
-		options = options || {};
-		
+		// refreshUpdates is true by default.
+		var options = dojo.mixin({refreshUpdates : true},myOptions);
+		var target = object;
+		var self = this;
 		
 		if (initialized){
 			var res;
 			// if object hasn't been loaded, we need to load it first in case a stub got modified.
 			// Must check to see that an id is present, otherwise, it is a new object that needs 
 			// to be saved and we don't want to do this.
-			if (object[this.idProperty] && typeof object.load == "function"){
-				return dojo.when(this.get(object[this.idProperty]),
+			if (target[this.idProperty] && typeof target.load == "function"){
+				return dojo.when(this.get(target[this.idProperty]),
 					function(result){
-						result = dojo.mixin(result,object); // use supplied values to override loaded ones.
+						result = dojo.mixin(result,target); // use supplied values to override loaded ones.
 						return this.put(result,options);	// then load.
 					}
 				);
 			} 
-			return this.db.saveDoc(object,options)
+			return this.db.saveDoc(target,options)
 				.then(
 					// on success, couch.js should have updated id and rev for us.
 					// but the server may adjust values on save, so if refresh updates 
 					// is set, we'll reload the value from the database.
+					// Otherwise, we return the saved object just modifying the id and rev.
+					// Note that couchdb will remove the underscore from these 
+					// when reporting result so we modify this.
 					function(result){
 						if (options.refreshUpdates){
-							return this.get(result.id);
+							return self.get(result.id);
 						} else {
-							return result;
+							target._id = result.id;
+							target._rev = result.rev;
+							return target;
 						}
 					}
 				);
@@ -496,7 +503,7 @@ dojo.declare("dojocouch.store._CouchdbStore", null, {
 		return dojo.when(this.getDefinedViews(),function(views){
 				// capitalize the query parameter name and prepend with 'by', so typeId -> byTypeId
 			var searchView = origKeyValue && ("by" + origKeyValue.charAt(0).toUpperCase() + origKeyValue.slice(1));
-			if (views && views.indexOf(searchView) > -1 ){
+			if (views && dojo.indexOf(views,searchView) > -1 ){
 				viewParams.view = searchView;
 				viewParams.key = query[origKeyValue];
 				return self.viewsQuery(viewParams,options);		

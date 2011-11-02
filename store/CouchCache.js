@@ -1,5 +1,6 @@
-define("dojocouch/store/CouchCache", ["dojo"], function(dojo) {
-dojo.getObject("store", true, dojo);
+//define("dojocouch/store/CouchCache", ["dojo"], function(dojo) {
+dojo.provide("dojocouch.store.CouchCache");
+//dojo.getObject("store", true, dojo);
 
 dojo.require("dojo.store.Cache");
 
@@ -72,6 +73,7 @@ dojocouch.store.CouchCache = function(masterStore, cachingStore, /*dojo.store.__
 
 	return cache;
 }
-
+/*
 return dojocouch.store.CouchCache;
 });
+*/

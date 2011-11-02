@@ -101,6 +101,7 @@ dojo.declare("dojocouch.util._Couch", [],{
       options = options || {};
 
       return dojo.xhr("GET",{url:this.urlPrefix + "/_session"
+        , preventCache : true // noCache true by default (IE has problem with caching on session GET)
         , handleAs : "json"
         , load : function(response,ioargs){
             var respStatus = ioargs.xhr.status;
@@ -805,10 +806,10 @@ dojo.declare("dojocouch.util._Couch", [],{
       for (var name in options) {
           // load & handle added for dojo. success, beforeSuccess can likely be removed. ajaxStart?
         //if ($.inArray(name, ["error", "success", "beforeSuccess", "ajaxStart","load","handle"]) >= 0)
-        if (["error", "success", "beforeSuccess", "ajaxStart","load","handle"].indexOf(name) > -1)
+        if (dojo.indexOf(["error", "success", "beforeSuccess", "ajaxStart","load","handle"],name) > -1)
           continue;
         var value = options[name];
-        if (["key", "startkey", "endkey"].indexOf(name) >= 0) {
+        if (dojo.indexOf(["key", "startkey", "endkey"],name) >= 0) {
           value = dojocouch.util.Couch.toJSON(value);
         }
         buf.push(encodeURIComponent(name) + "=" + encodeURIComponent(value));
