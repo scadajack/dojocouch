@@ -108,17 +108,19 @@ dojo.declare("dojocouch.util._Couch", [],{
             if (respStatus == 200){
               if (options.success) {
                 options.success(response);
-                console.error("success called ln 87");
+                console.error("success called in method 'session' (around ln 111)");
               }
             } else {
               console.log("Server reported Error getting session info. Response Status ==> ",respStatus,
                   " Response ==>",response, ", IOArgs ==>", ioargs);
             }
-            return response;
+            response._ioargs = ioargs;
+            return this.encodeRespose(response,ioargs);
           }
         , error : function (response, ioargs){
             console.log("Ajax error get session info. Response ==> ", response, ", IOArgs ==> ", ioargs);
-            return response;
+            response._ioargs = ioargs;
+            return this.encodeRespose(response,ioargs);
         }
 
       });
@@ -180,12 +182,12 @@ dojo.declare("dojocouch.util._Couch", [],{
             } else {
               alert("An error occurred logging in: " + resp.reason);
             }
-            return resp;
+            return this.encodeRespose(resp,ioargs);
           }
         ,  error : function (resp, ioargs){
             console.log("Ajax error logging in. Response ==> ", resp, ", IOArgs ==> ", ioargs);
             if (options.error) options.error(resp,ioargs);
-            return resp || {};
+            return this.encodeRespose(resp,ioargs);
           } 
       });
     },
@@ -206,12 +208,12 @@ dojo.declare("dojocouch.util._Couch", [],{
               console.log("An error occurred logging out: " + resp.reason);
               options.error && options.error(resp,ioargs);
             }
-            return resp;
+            return return this.encodeRespose(resp,ioargs);;
           }
-        ,  error : function (response, ioargs){
-            alert("Ajax error logging out. Response ==> ", response, ", IOArgs ==> ", ioargs);
-            options.error && options.error(response,ioargs);
-            return response;
+        ,  error : function (resp, ioargs){
+            alert("Ajax error logging out. Response ==> ", resp, ", IOArgs ==> ", ioargs);
+            options.error && options.error(resp,ioargs);
+            return return this.encodeRespose(resp,ioargs);;
           } 
       });
     },
@@ -462,6 +464,7 @@ dojo.declare("dojocouch.util._Couch", [],{
             , headers  : headers
             , postData : doc
             , load : function(resp,ioargs){
+                resp = this.encodeResponse(resp,ioargs);
                 var respStatus = ioargs.xhr.status;
 
                 if (respStatus == 200 || respStatus == 201 || respStatus == 202) {
@@ -491,6 +494,7 @@ dojo.declare("dojocouch.util._Couch", [],{
             ,  error : function (response, ioargs){
                 alert("Ajax error saving document. Response ==> " + response.message
                       + ",\n Server Says ==> " + ioargs.xhr.responseText);
+                resp = this.encodeResponse(resp,ioargs);     
                 df.errback(response);
               } 
           });
@@ -633,6 +637,7 @@ dojo.declare("dojocouch.util._Couch", [],{
             ajaxOptions
           );
         },
+
         getDbProperty: function(propName, options, ajaxOptions) {
           return dojocouch.util.Couch.ajax({url: this.uri + propName + dojocouch.util.Couch.encodeOptions(options)},
             options,
@@ -696,6 +701,13 @@ dojo.declare("dojocouch.util._Couch", [],{
         );
       }
       return self.uuidCache.shift();
+    },
+
+    encodeResponse = function(response,ioargs){
+        response = response || {};
+        ioargs = ioargs || {};
+        response._ioargs = ioargs;
+        return response;
     }
 });
 
@@ -740,8 +752,8 @@ dojo.declare("dojocouch.util._Couch", [],{
       , headers : headers
       , contentType : ajaxOptions.contentType
       , load: function(resp,ioargs) {
-          ioargs = ioargs || {};
-          resp = resp || {};
+          //ioargs = ioargs || {};
+          resp = this.encodeResponse(resp,ioargs);
           var respStatus = ioargs.xhr && ioargs.xhr.status;
           if (options.ajaxStart) {
             options.ajaxStart(resp);
@@ -749,12 +761,12 @@ dojo.declare("dojocouch.util._Couch", [],{
           if (respStatus == options.successStatus) {
             if (options.beforeSuccess) {
               options.beforeSuccess(resp,ioargs);
-              console.error("before success called ln 841");
+              console.error("before success called in ajax method around ln 764");
               console.trace();
             }
             if (options.success) {
               options.success(resp,ioargs);
-              console.error("success called ln 845");
+              console.error("success called in ajax method around ln 769");
             }
           } else {
             alert(errorMessage + ": " + resp.toString());
@@ -765,6 +777,7 @@ dojo.declare("dojocouch.util._Couch", [],{
       , error : function(resp,ioargs){
             resp = resp || errorMessage;
             options.error && options.error(resp || errorMessage, ioargs || {});
+            resp = this.encodeResponse(resp,ioargs);
             return resp;
         }
     }
@@ -827,3 +840,5 @@ dojo.declare("dojocouch.util._Couch", [],{
       return val;
     }) : null;
   }
+
+  
