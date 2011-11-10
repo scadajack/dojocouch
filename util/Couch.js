@@ -115,12 +115,12 @@ dojo.declare("dojocouch.util._Couch", [],{
                   " Response ==>",response, ", IOArgs ==>", ioargs);
             }
             response._ioargs = ioargs;
-            return this.encodeRespose(response,ioargs);
+            return dojocouch.util.Couch.encodeResponse(response,ioargs);
           }
         , error : function (response, ioargs){
             console.log("Ajax error get session info. Response ==> ", response, ", IOArgs ==> ", ioargs);
             response._ioargs = ioargs;
-            return this.encodeRespose(response,ioargs);
+            return dojocouch.util.Couch.encodeResponse(response,ioargs);
         }
 
       });
@@ -182,12 +182,12 @@ dojo.declare("dojocouch.util._Couch", [],{
             } else {
               alert("An error occurred logging in: " + resp.reason);
             }
-            return this.encodeRespose(resp,ioargs);
+            return dojocouch.util.Couch.encodeResponse(resp,ioargs);
           }
         ,  error : function (resp, ioargs){
             console.log("Ajax error logging in. Response ==> ", resp, ", IOArgs ==> ", ioargs);
             if (options.error) options.error(resp,ioargs);
-            return this.encodeRespose(resp,ioargs);
+            return dojocouch.util.Couch.encodeResponse(resp,ioargs);
           } 
       });
     },
@@ -208,12 +208,12 @@ dojo.declare("dojocouch.util._Couch", [],{
               console.log("An error occurred logging out: " + resp.reason);
               options.error && options.error(resp,ioargs);
             }
-            return return this.encodeRespose(resp,ioargs);;
+            return dojocouch.util.Couch.encodeResponse(resp,ioargs);;
           }
         ,  error : function (resp, ioargs){
             alert("Ajax error logging out. Response ==> ", resp, ", IOArgs ==> ", ioargs);
             options.error && options.error(resp,ioargs);
-            return return this.encodeRespose(resp,ioargs);;
+            return dojocouch.util.Couch.encodeResponse(resp,ioargs);;
           } 
       });
     },
@@ -464,7 +464,7 @@ dojo.declare("dojocouch.util._Couch", [],{
             , headers  : headers
             , postData : doc
             , load : function(resp,ioargs){
-                resp = this.encodeResponse(resp,ioargs);
+                resp = dojocouch.util.Couch.encodeResponse(resp,ioargs);
                 var respStatus = ioargs.xhr.status;
 
                 if (respStatus == 200 || respStatus == 201 || respStatus == 202) {
@@ -494,7 +494,7 @@ dojo.declare("dojocouch.util._Couch", [],{
             ,  error : function (response, ioargs){
                 alert("Ajax error saving document. Response ==> " + response.message
                       + ",\n Server Says ==> " + ioargs.xhr.responseText);
-                resp = this.encodeResponse(resp,ioargs);     
+                resp = dojocouch.util.Couch.encodeResponse(resp,ioargs);     
                 df.errback(response);
               } 
           });
@@ -701,13 +701,6 @@ dojo.declare("dojocouch.util._Couch", [],{
         );
       }
       return self.uuidCache.shift();
-    },
-
-    encodeResponse = function(response,ioargs){
-        response = response || {};
-        ioargs = ioargs || {};
-        response._ioargs = ioargs;
-        return response;
     }
 });
 
@@ -719,6 +712,12 @@ dojo.declare("dojocouch.util._Couch", [],{
 //=====================================================================================================
 
 
+  dojocouch.util.Couch.encodeResponse = function(response,ioargs){
+      response = response || {};
+      ioargs = ioargs || {};
+      response._ioargs = ioargs;
+      return response;
+  };
 
   dojocouch.util.Couch.encodeDocId = function(docID) {
     var parts = docID.split("/");
@@ -753,7 +752,7 @@ dojo.declare("dojocouch.util._Couch", [],{
       , contentType : ajaxOptions.contentType
       , load: function(resp,ioargs) {
           //ioargs = ioargs || {};
-          resp = this.encodeResponse(resp,ioargs);
+          resp = dojocouch.util.Couch.encodeResponse(resp,ioargs);
           var respStatus = ioargs.xhr && ioargs.xhr.status;
           if (options.ajaxStart) {
             options.ajaxStart(resp);
@@ -777,7 +776,7 @@ dojo.declare("dojocouch.util._Couch", [],{
       , error : function(resp,ioargs){
             resp = resp || errorMessage;
             options.error && options.error(resp || errorMessage, ioargs || {});
-            resp = this.encodeResponse(resp,ioargs);
+            resp = dojocouch.util.Couch.encodeResponse(resp,ioargs);
             return resp;
         }
     }
